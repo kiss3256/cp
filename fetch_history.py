@@ -3,22 +3,21 @@ import requests
 
 def get_history(date):
 
+
     headers = {
-        'pragma': 'no-cache',
-        'cookie': 'PHPSESSID=4b2qs4rd84gb3n5ef9okj2jp5g',
+        'cookie': 'PHPSESSID=27p5o4smndapejab88fsk5l68o',
         'accept-encoding': 'gzip, deflate, br',
         'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
         'accept': 'application/json, text/javascript, */*; q=0.01',
-        'cache-control': 'no-cache',
+        'referer': 'https://6hcp6.com/pc/game/history.html',
         'authority': '6hcp6.com',
         'x-requested-with': 'XMLHttpRequest',
-        'referer': 'https://6hcp6.com/pc/game/history.html',
     }
 
     params = (
         ('data', date),
-        ('game_id', '43'),
+        ('game_id', '1'),
     )
 
     response = requests.get('https://6hcp6.com/pc/game/history', headers=headers, params=params)
@@ -50,7 +49,7 @@ def get_date(month):
 
 
 def main():
-    for x in range(4, 8):
+    for x in range(4, 9):
         date = get_date(x)
         day = next(date)
         while day is not 'end':

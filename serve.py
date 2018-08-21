@@ -12,6 +12,7 @@ def init():
     for x in path:
         with open(rootPath+x, 'r') as f:
             d = json.loads(f.readline())
+            d.reverse()
             data += d
     print(len(data))
 

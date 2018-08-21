@@ -1,0 +1,24 @@
+{
+  "name": "cp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "fetch_history.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/kiss3256/cp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kiss3256/cp/issues"
+  },
+  "homepage": "https://github.com/kiss3256/cp#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.87.0"
+  }
+}
