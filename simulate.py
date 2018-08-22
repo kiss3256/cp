@@ -3,7 +3,7 @@ import requests, json, random, sys, os, math
 
 
 def randBig():
-    return 'big'
+    # return 'big'
     return 'big' if random.randint(0, 1) else 'small'
 
 def randOdd():
@@ -23,82 +23,94 @@ def toOdd(pos, openNum):
     else:
         return 'odd' if sum(data) % 2 else 'even'
 
+def antiTag(t):
+    return 'big' if t != 'big' else 'small'
+
+def isTerm(last, now):
+    return int(last) + 1 == int(now)
 
 
 class Simulator(object):
     """docstring for Simulator"""
     def __init__(self):
         super(Simulator, self).__init__()
-        self.lastBalc = 500
-        self.nowBalc = 500
-        self.lastBuy = ()
-        self.target = 200
-        self.baseCost = 5
-        self.count = 0
+        self.nowBalc        = 100
+        self.maxBalc        = 100
+        self.minBalc        = 100
+        self.lastBuy        = (0, 0, 0)
+        self.baseCost       = 1
+        self.recordResult   = (0, 0)
+        self.loseTime       = 0
+        self.maxLoseTime    = 3
+        self.tapBuy         = 3
 
-        self.__init()
+        # self.__init()
+        self.__init_fsssc()
 
-    def buy_new(self, term, cost):
-        self.lastBuy = (term, 5, randBig(), '', cost)
-        self.nowBalc -= cost * 1
+    def buy_new(self, term, big, cost):
+        print(' 第 %s 期 买入 %s %d 元 ' % (term, big, cost))
+        self.lastBuy = (term, big, cost)
+        self.nowBalc -= cost
+
+        if self.nowBalc <= 0:
+            print(' 账户余额不足，程序退出 ')
+            print(' 账户剩余金额 %f 最大金额 %f, 最小金额 %f ' % (self.nowBalc, self.maxBalc, self.minBalc))
+            sys.exit(0)
 
 
     def calculate(self, data):
-        
-        self.count += 1
 
-        if self.lastBuy == ():
-            # buy and return
-            self.buy_new(data['turnNum'], self.baseCost)
-        else:
-            # calculate and buy new
-            term, pos, big, odd, cost = self.lastBuy
-
-            nextCost = 0
+        term, big, cost = self.lastBuy
+        if isTerm(term, data['turnNum']):
             if big == toBig(5, data['openNum']):
-                self.nowBalc += 1.99 * cost
-                nextCost = self.baseCost
+                self.nowBalc += round(1.99 * cost, 2)
+                print(' 第 %s 期 中奖 %d 元，结算金额 %f 元' % (term, cost, self.nowBalc))
+                self.loseTime = 0
             else:
-                nextCost = cost * 2
-            # if odd == toOdd(5, data['openNum']):
-            #     self.nowBalc += 1.99 * cost
+                print(' 第 %s 期 %s 未中奖，结算金额 %f 元' % (data['turnNum'], toBig(5, data['openNum']), self.nowBalc))
+                self.loseTime += 1
+        else:
+            print(' 第 %s 期 %s 未买入' % (data['turnNum'], toBig(5, data['openNum'])))
 
-                if nextCost > math.pow(self.baseCost, 3):
-                    nextCost = self.baseCost
-                    self.lastBuy = ()
-                    return None
 
-            if self.nowBalc < 0:
-                print(' died ')
-                sys.exit(0)
+        if self.nowBalc > self.maxBalc:
+            self.maxBalc = self.nowBalc
+        if self.nowBalc < self.minBalc:
+            self.minBalc = self.nowBalc
 
-            print(self.count)
-            print(str(term) + ': ' + str(self.nowBalc))
-            self.buy_new(data['turnNum'], nextCost)
+        self.lastBuy = (0, 0, 0)
+        b, c = self.recordResult
+        if c >= self.tapBuy:
+            nextCost = self.baseCost * math.pow(2, self.loseTime % self.maxLoseTime)
+            self.buy_new(data['turnNum'], antiTag(b), nextCost)
 
+            
+
+
+    def record(self, data):
+        big = toBig(5, data['openNum'])
+        b, c = self.recordResult
+        if b == big:
+            self.recordResult = (b, c+1)
+        else:
+            self.recordResult = (big, 1)
 
 
 
 
     def request(self, code):
-        # url = 'http://localhost:5000/result/'
-        # response = requests.get(url + str(code))
-        # data = json.loads(response.text)
-        code %= len(self.data)
+        if code >= len(self.data):
+            print(' 没有足够数据，程序退出 ')
+            print(' 账户剩余金额 %f 最大金额 %f, 最小金额 %f ' % (self.nowBalc, self.maxBalc, self.minBalc))
+            sys.exit(0)
         data = self.data[code]
+        self.record(data)
         self.calculate(data)
 
 
-    def reached(self):
-        if self.nowBalc - self.lastBalc > self.target:
-            self.lastBalc = self.nowBalc
-            print(' --- Reached --- ')
-            return True
-
-        return False
-
 
     def __init(self):
+        print(' 生成测试数据 ')
         rootPath = 'data/6hcp/'
         data = []
         path = os.listdir(rootPath)
@@ -111,7 +123,19 @@ class Simulator(object):
         self.data = data
 
 
+    def __init_fsssc(self):
+        print(' 生成测试数据 ')
+        path = 'data/fsssc_data.json'
+        with open(path, 'r') as f:
+            d = json.loads(f.read())
+            data = d['data']['detail']['LIST']
+            data.reverse()
+            self.data = data
+
+
+
 def main():
+    print(' 模拟程序开始 ')
     s = Simulator()
     c = 0
     while True:

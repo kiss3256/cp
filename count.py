@@ -1,62 +1,48 @@
-import requests, json, threading, time
-
-maxCode = 8000
-baseUrl = 'http://localhost:5000/result/'
+import json, os
+from matplotlib import pyplot as plt
 
 
-arrResult = {}
-openDebug = False
+def toBig(pos, openNum):
+    data = [int(x) for x in openNum.split(',')]
+    if pos:
+        return 'big' if data[pos-1] > 4 else 'small'
+    else:
+        return 'big' if sum(data) > 22 else 'small'
 
-
-def make_a_request(code):
-  global arrResult
-  try:
-    response = requests.get(baseUrl + code)
-    result = json.loads(response.text)
-    key = result['turnNum'][8:]
-    arrResult[key].append([int(x) for x in result['openNum'].split(',')])
-  except Exception as e:
-    print(' --- Error --- \n\t ' + str(e))
-
-
-
-def init():
-  global arrResult
-
-  def three_bit(n):
-    if n < 10:
-      return '00' + str(n)
-    if n < 100:
-      return '0' + str(n)
-    return str(n)
-
-
-  for i in range(1, 121):
-    arrResult[three_bit(i)] = []
-
-
-
+def toOdd(pos, openNum):
+    data = [int(x) for x in openNum.split(',')]
+    if pos:
+        return 'odd' if data[pos-1] % 2 else 'even'
+    else:
+        return 'odd' if sum(data) % 2 else 'even'
 
 def main():
-  global arrResult, openDebug
+  rootPath = 'data/6hcp/'
+  data = []
+  path = os.listdir(rootPath)
+  for x in path:
+      with open(rootPath+x, 'r') as f:
+          d = json.loads(f.readline())
+          d.reverse()
+          data += d
+  print(len(data))
 
-  init()
+  result = [0 for x in range(14)]
+  last = ''
+  count = 0
+  for x in data:
+    big = toBig(5, x['openNum'])
+    if big == last:
+      count += 1
+    else:
+      
+      result[count+1] += 1
 
-  for i in range(maxCode):
+      last = big
+      count = 0
 
-    thread = threading.Thread(target=make_a_request, args=(str(i),))
-    thread.start()
-    # thread.join()
-
-  time.sleep(30)
-
-  try:
-    file = open('count.json', 'w')
-    file.write(str(arrResult))
-    file.close()
-  except Exception as e:
-    print(' --- Error --- \n\t ' + str(e))
-
+  plt.plot([x/sum(result[1:]) for x in result[1:]])
+  plt.show()
 
 
 if __name__ == '__main__':
