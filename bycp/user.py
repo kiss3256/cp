@@ -1,4 +1,5 @@
 import json
+import time
 from logging import Logger
 from req import Http
 
@@ -26,6 +27,8 @@ class User(object):
         self.lastBalance = 0
         self.nowBalance = 0
         self.reached = False
+
+        self.lastData = ()
 
         self.session = Http.get_session()
         self.login(arg)
@@ -56,6 +59,17 @@ class User(object):
 
         return res
 
+    def tink(self):
+        pass
+
+    def update_status(self):
+        # update self.reached
+        pass
+
+    def strategy(self):
+        # self.buy()
+        pass
+
     def balance(self):
 
         res = self.session.post('balance')
@@ -68,3 +82,9 @@ class User(object):
 
     def run(self, strategy):
         logger.info('use', strategy)
+
+        while not self.reached:
+            self.tink()
+            self.update_status()
+            self.strategy()
+            time.sleep(60)

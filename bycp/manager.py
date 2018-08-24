@@ -11,4 +11,4 @@ class Manager(object):
     def run(self):
         for user in self.userEntities:
             if user.status == 'online':
-                thread6.run_threaded(user.run, ['simulate_1'])
+                thread6.run_threaded(user.run)
