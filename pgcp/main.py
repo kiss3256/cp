@@ -8,8 +8,8 @@ def main():
     while True:
         try:
             d = a.lottery()
-            r = a.settle(d)
-            a.buy(r)
+            a.settle(d)
+            a.buy(d)
 
             time.sleep(20)
         except Exception as e:
