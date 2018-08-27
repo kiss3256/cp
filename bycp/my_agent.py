@@ -1,9 +1,10 @@
 import requests, json, math
 from conenct import Connect
 
-client = Connect.get_connection()
-bycp = client['bycp']
-db = bycp['bycp-ssc']
+import logging
+
+logger = logging.getLogger('bycp.Leyton')
+logger.setLevel(logging.DEBUG)
 
 cookies = {
     'more': 'undefined',
@@ -28,79 +29,64 @@ headers = {
 }
 
 
-def all_big(a, b, c):
-    if a > 4 and b > 4 and c > 4:
-        return 'small'
-    if a < 5 and b < 5 and c < 5:
-        return 'big'
-    return None
+def to_big(data):
+    a, b, c, d, e = data['n1'], data['n2'], data['n3'], data['n4'], data['n5']
+    return (1 if a > 4 else 0,
+            1 if b > 4 else 0,
+            1 if c > 4 else 0,
+            1 if d > 4 else 0,
+            1 if e > 4 else 0,)
 
 
-def three_combos(data, data1, data2):
-    a1 = [int(a) for a in data['open_code']]
-    a2 = [int(a) for a in data1['open_code']]
-    a3 = [int(a) for a in data2['open_code']]
-    b1 = all_big(a1[0], a2[0], a3[0])
-    b2 = all_big(a1[1], a2[1], a3[1])
-    b3 = all_big(a1[2], a2[2], a3[2])
-    b4 = all_big(a1[3], a2[3], a3[3])
-    b5 = all_big(a1[4], a2[4], a3[4])
-
-    return (b1, b2, b3, b4, b5)
+def three_combos(a, b, c):
+    ra = to_big(a)
+    rb = to_big(b)
+    rc = to_big(c)
+    return [all(x) for x in zip(ra, rb, rc)]
 
 
 class Agent(object):
-    
+    def __init__(self):
+        client = Connect.get_connection()
+        bycp = client['bycp']
+        self.db = bycp['bycp-ssc']
+
+        self.last = [(None, 0), (None, 0), (None, 0), (None, 0), (None, 0)]
+        self.lose = [0, 0, 0, 0, 0]
+
+    def get(self, term):
+        return self.db.find_one({'term': term})
+
+    def set(self, data):
+        self.db.update({'term': data['term']}, data, {'upsert': True})
+
+    def look(self, term):
+        a = self.get(term)
+        b = self.get(term - 1)
+        c = self.get(term - 2)
+
+        if a and b and c:
+            return three_combos(a, b, c)
+        else:
+            return False, False, False, False, False
 
     def lottery(self):
+        data = {'term': 1235}
+        # self.set(data)
 
+        return data
 
     def settle(self, data):
-
+        pass
 
     def buy(self, data):
 
-        if e == 'big':
-            data = [
-                ('orders[0][title]', '\u7B2C\u4E94\u7403'),
-                ('orders[0][num]', '\u7B2C\u4E94\u7403 \u5927'),
-                ('orders[0][content]', 'B'),
-                ('orders[0][play]', 'B5'),
-                ('orders[0][code]', 'jsssc'),
-                ('orders[0][odds]', '1.999'),
-                ('orders[0][money]', str(int(ep))),
-                ('orders[0][check]', 'true'),
-                ('code', 'jsssc'),
-                ('drawNumber', str(int(now_term) + 1)),
-            ]
-
-
-            print('买大')
-
-            # response = requests.post('https://www-bb77.com/bets', headers=headers, cookies=cookies, data=data)
-            #
-            # print(response.text)
-
-        if e == 'small':
-            data = [
-                ('orders[0][title]', '\u7B2C\u4E94\u7403'),
-                ('orders[0][num]', '\u7B2C\u4E94\u7403 \u5C0F'),
-                ('orders[0][content]', 'B'),
-                ('orders[0][play]', 'B5'),
-                ('orders[0][code]', 'jsssc'),
-                ('orders[0][odds]', '1.999'),
-                ('orders[0][money]', str(int(ep))),
-                ('orders[0][check]', 'true'),
-                ('code', 'jsssc'),
-                ('drawNumber', str(int(now_term) + 1)),
-            ]
-
-            print('买小')
-            # response = requests.post('https://www-bb77.com/bets', headers=headers, cookies=cookies, data=data)
-            #
-            # print(response.text)
-
-        if e is None:
-            pass
+        a = self.look(data['term'])
+        print(a)
 
         print('----------------------------------------------')
+
+    def run(self):
+        data = self.lottery()
+        self.settle(data)
+        self.buy(data)

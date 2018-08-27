@@ -33,8 +33,8 @@ def main():
 
     result = json.loads(response.text)
     client = Connect.get_connection()
-    bb77 = client["bb77"]
-    col = bb77["om_ssc"]
+    db = client["db_ssc"]
+    col = db["ssc"]
 
     data = []
     for x in result['data']['detail']['LIST']:

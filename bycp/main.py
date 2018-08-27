@@ -7,13 +7,10 @@ def main():
 
     while True:
         try:
-            d = a.lottery()
-            r = a.settle(d)
-            a.buy(r)
-
+            a.run()
             time.sleep(20)
         except Exception as e:
-            print(' ---- ERROR ---- ', e)
+            print(' ---- ERROR ---- ', e.args)
             time.sleep(10)
 
 

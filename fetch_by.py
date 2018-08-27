@@ -5,8 +5,10 @@ from conenct import Connect
 
 def get_result(page):
     cookies = {
-        'PHPSESSID': 'o50cnoien29aidlb6htfnv2r41',
-        'goeasyNode': '6',
+        'page': 'jsssc',
+        'more': 'undefined',
+        'PHPSESSID': 'umiskgio4ml3ga5srn0jregun4',
+        'goeasyNode': '1',
     }
 
     headers = {
@@ -36,13 +38,13 @@ def get_result(page):
 def main():
     data = []
     try:
-        for i in range(1, 50):
+        for i in range(1, 1000):
             data += get_result(i)
             print(len(data))
     except IndexError:
         client = Connect.get_connection()
-        bb77 = client["bb77"]
-        col = bb77["om_ssc"]
+        db = client["db_ssc"]
+        col = db["ssc"]
         col.insert_many(data)
 
 

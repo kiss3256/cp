@@ -1,77 +1,95 @@
-import sys
+import sys, math
 
 from conenct import Connect
 
 
-def to_big(n):
-    return 1 if n > 4 else 0
+def to_big(data):
+    a, b, c, d, e = data['n1'], data['n2'], data['n3'], data['n4'], data['n5']
+    return (1 if a > 4 else 0,
+            1 if b > 4 else 0,
+            1 if c > 4 else 0,
+            1 if d > 4 else 0,
+            1 if e > 4 else 0,)
 
 
-def anti_big(n):
-    return 0 if n else 1
+def three_combos(a, b, c):
+    ra = to_big(a)
+    rb = to_big(b)
+    rc = to_big(c)
+    return [all(x) for x in zip(ra, rb, rc)]
 
 
 class User(object):
     def __init__(self):
-        self.last = ()
         self.balance = 100
-        self.record = ()
-        self.lose = 0
+        self.last = [(None, 0), (None, 0), (None, 0), (None, 0), (None, 0)]
+        self.lose = [0, 0, 0, 0, 0]
 
-    def cal(self, n5):
-        if self.last != ():
-            b, c = self.last
-            if n5 == b:
-                self.balance += c * 1.99
-                self.lose = 0
-                self.last = ()
+        client = Connect.get_connection()
+        db = client["db_ssc"]
+        self.col = db["ssc"]
+
+    def cal(self, bag):
+        last = self.last
+        lose = self.lose
+        for i in range(5):
+            # print(last[i][0])
+            if last[i][0] is not None:
+                if last[i][0] == bag[i]:
+                    self.balance += last[i][1] * 1.99
+                    lose[i] = 0
+                else:
+                    lose[i] += 1
+        # print(self.last, self.lose, self.balance)
+
+    def buy(self, bag, combos):
+        i = 0
+        last = self.last
+        lose = self.lose
+        max_times = 10
+        for x in bag:
+            if x[1] and combos[i]:
+                money = math.pow(2, min(max_times, lose[i] % max_times))
+                self.balance -= money
+                last[i] = (0 if x[0] else 1, money)
             else:
-                self.lose += 1
+                last[i] = (None, 0)
+                pass
+            i += 1
 
-    def update(self, n5):
-        if self.record == ():
-            self.record = (n5, 1)
+    def run(self, term, switch):
+        data = self.get(term)
+        if data:
+            big = to_big(data)
+            self.cal(big)
+            self.buy(zip(big, switch), self.look(term))
+            print(term, self.balance)
+            if self.balance < 0:
+                print(term, 'die')
+                sys.exit(0)
+        # else:
+        #     sys.exit(0)
+
+    def look(self, term):
+        a = self.get(term)
+        b = self.get(term - 1)
+        c = self.get(term - 2)
+
+        if a and b and c:
+            return three_combos(a, b, c)
         else:
-            b, c = self.record
-            if n5 == b:
-                self.record = (b, c + 1)
-            else:
-                self.record = (n5, 1)
+            return False, False, False, False, False
 
-    def buy(self, n):
-        b, c = self.record
-        if c >= 3 and self.lose <= 3:
-            if self.last == ():
-                self.balance -= 1
-                self.last = (n, 1)
-            else:
-                b1, c1 = self.last
-                self.balance -= c1 * 2
-                self.last = (n, c1 * 2)
-
-    def run(self, data):
-        n5 = to_big(data['n1'])
-        self.cal(n5)
-        self.update(n5)
-        if self.balance <= 50:
-            print('---------------- DANGER ---------------- ')
-
-        if self.balance <= 10:
-            print('-------died-------')
-            sys.exit(0)
-        print(n5, self.balance, self.lose)
-        self.buy(anti_big(n5))
+    def get(self, term):
+        return self.col.find_one({'term': term})
 
 
 def main():
-    client = Connect.get_connection()
-    bb77 = client["bb77"]
-    col = bb77["om_ssc"]
-    data = col.find({})
     u = User()
 
-    for i in range(550, -1, -1):
-        u.run(data[i])
+    term = 10735809
+    for i in range(1000):
+        u.run(term + i, (False, False, True, True, True))
 
 
 if __name__ == '__main__':
